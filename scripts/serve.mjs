@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../public/', import.meta.url));
 const port = Number(process.env.PORT || 4173);
+const host = process.env.HOST || (process.env.PORT ? '0.0.0.0' : '127.0.0.1');
 const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png' };
 
 createServer(async (request, response) => {
@@ -28,4 +29,4 @@ createServer(async (request, response) => {
     response.writeHead(error instanceof URIError ? 400 : 404);
     response.end(error instanceof URIError ? 'Bad request' : 'Not found');
   }
-}).listen(port, '127.0.0.1', () => console.log(`Invent IO frontend: http://localhost:${port}`));
+}).listen(port, host, () => console.log(`Invent IO frontend listening on http://${host}:${port}`));
