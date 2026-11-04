@@ -1,64 +1,35 @@
-# Invent IO Frontend
+# Invent IO frontend
 
-Web-first sales and inventory prototype based on the Invent IO mobile Figma flow. Desktop uses a sidebar, payment table, and sale side panel; smaller screens use bottom navigation and a full-screen sale panel.
+React 19 merchant application with an ESBuild production bundle and a Node server that proxies `/api/v1/*` to the deployed Invent IO backend. JavaScript/JSX source lives in `src/`. The `.mjs` files are Node build/server scripts, not the frontend framework.
 
-- Backend repository: [Afolabiamez/Invent-IO](https://github.com/Afolabiamez/Invent-IO)
-- Private product preview: [Inventio sales workspace](https://inventio-sales-workspace.adehsanya.chatgpt.site) (ChatGPT sign-in required)
-- Figma starting screen: [Sales · Pending payments](https://www.figma.com/design/MLpHP16bR0l2gDUHf918yv/INVENT-IO?node-id=397-5476)
+The public root opens the Figma landing page W-LP-01 (`694:3`) with its original photographic hero, product illustrations, how-it-works, feature grid, Owner & Staff section, closing CTA and footer. Landing illustrations retain the Figma composition but use neutral labels instead of example names, balances or payment records; the merchant workspace uses authenticated API responses. Login and Create account link to real forms. Section links scroll without changing the application route.
 
-## Run locally
+## Run
 
-Requires Node.js 22 or newer. There are no npm dependencies and no installation step.
+Requires Node 22 or newer.
 
 ```sh
-git clone https://github.com/adehsanya/Invent-IO-Frontend.git
-cd Invent-IO-Frontend
+npm ci
 npm run dev
 ```
 
-Open http://localhost:4173. Set `PORT` to use another port.
+For production, run `npm run build` followed by `npm start`. The server serves `dist/`, binds the assigned `PORT` on `0.0.0.0`, and supports reset-password and verify-email lifecycle links. `API_ORIGIN` defaults to `https://invent-io-backend-production.up.railway.app`; configure it on the server, never put provider or database secrets in the browser.
 
-```sh
-npm run check
-npm run build
-```
+## Architecture
 
-`check` validates JavaScript syntax. `build` copies the runnable static site into `dist/`, which can be served by a static hosting service. The development server listens on loopback only.
+- `src/App.jsx`: React root, hash-route lifecycle, accessible dialogs, toasts and error boundary.
+- `src/views.jsx`, `src/ui.jsx`: JSX merchant screens and shared UI.
+- `src/controller.js`: merchant state and existing authentication, catalog, CSV, payment matching, permission and notification actions, connected through React event handlers and `useSyncExternalStore`.
+- `src/Landing.jsx`, `src/landing/`: Figma-derived React landing sections, local image assets and responsive CSS. The design remains rendered HTML, not a screenshot used as the page.
+- `public/api.js`: API client, session refresh, pagination, backend error codes and request references.
+- `scripts/serve.mjs`: same-origin API proxy and static server.
 
-## Included flows
-
-- Pending payments, Recorded, and Not a sale views
-- Search, sorting, and recorded-date filters
-- Manual payment entry with Cash, Transfer, or Card
-- Product selection, quantities, live totals, and mismatch acknowledgement
-- Review and confirm sale, profit calculation, and stock deduction
-- Low-stock and negative-count warnings
-- Sale detail, void sale, stock return, and restore to pending
-- Save a payment for later, next pending payment, and summary views
-
-## Current data model and backend handoff
-
-This is an interactive frontend prototype. It uses sample customers, payments, products, and stock. It does not call the backend or Paystack, perform authentication, or move money. Demo dates are fixed to 15 October 2026 for repeatable review.
-
-`public/app.js` contains the initial data, UI rendering, and state transitions. Changes persist in browser localStorage under `inventio-web-v1`; **More → Reset demo data** restores the samples. Data is local to each browser and origin.
-
-Before production integration, agree on the API contract with the backend team. Replace local state persistence with authenticated endpoints for products, payments, sales, voiding, and summaries. Sale creation, payment matching, stock deduction, and void reversal should be handled atomically by the backend. Profit, permissions, and financial totals must be calculated and enforced server-side. Do not place server credentials or Paystack secret keys in client files.
-
-## Structure
-
-```text
-public/
-  index.html       Application shell
-  app.js           Demo data, flow state, and UI handlers
-  style.css        Responsive layout and design tokens
-  assets/          Local Figma product images and SVG icons
-scripts/
-  serve.mjs        Dependency-free local HTTP server
-  build.mjs        Copies static output to dist/
-```
-
-The CSS loads Inter from Google Fonts, with Arial as a fallback. Product images and icons are stored locally; the app does not rely on expiring Figma asset URLs. Hosting-specific identity and credentials are excluded from this repository.
+There is no HTML-string rendering, `innerHTML`, `dangerouslySetInnerHTML`, demo login, browser-stored product/sale database, or simulated successful transaction in the production application. Native form validation and error feedback remain in the merchant controller.
 
 ## Validation
 
-The original flow was manually checked in a browser at desktop and mobile widths, including matching products to payment, confirmation, stock deduction, voiding and stock return, restoring payments, saving for later, persistence after reload, and the empty date-filter state. `npm run check` is a syntax check, not an automated end-to-end test suite.
+`npm test` runs API/CSV/money/notification/proxy/session tests. Install Playwright Chromium (`npx playwright install chromium`), then run `npm run test:ui` for browser integration tests against isolated API fixtures. These cover landing routing/local assets/mobile overflow, failed/500/successful login, registration confirmation, reset/change/verify password and email flows, product search/create/edit and escaped names, CSV import, manual cash payload, payment matching retries with a stable idempotency key, logout, read-only permissions and sale panel layout at five widths. Fixtures are tests, not a production fallback or proof of successful live database writes.
+
+## Remaining integration work
+
+Production backend login previously returned HTTP 500; this frontend conversion does not fix that server error or verify live account persistence. The backend team needs to inspect logs and verify its authentication and email configuration. The tenancy bootstrap must return authorized branch information for manual cash entry. Platform-wide admin, subscription billing and team integrations are incomplete pending actual API contracts. Paystack managed account setup is currently explicitly test mode; real payments are not represented as enabled. `invent.com.ng` requires DNS changes before it points to this Railway frontend.
