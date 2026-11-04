@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { resolve, relative, isAbsolute, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const root = fileURLToPath(new URL("../public/", import.meta.url));
+const defaultRoot = fileURLToPath(new URL("../dist/", import.meta.url));
 const types = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
@@ -14,10 +14,12 @@ const types = {
   ".webmanifest": "application/manifest+json",
 };
 export function createFrontendServer({
+  staticRoot = defaultRoot,
   apiOrigin = process.env.API_ORIGIN ||
     "https://invent-io-backend-production.up.railway.app",
   fetcher = fetch,
 } = {}) {
+  const root = staticRoot;
   const upstream = new URL(apiOrigin);
   if (
     upstream.protocol !== "https:" &&

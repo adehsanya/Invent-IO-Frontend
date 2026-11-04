@@ -3089,3 +3089,6 @@ small,
 body:has(.back-office) .demo-banner { position:relative; }
 body:has(.back-office) .demo-banner + .back-office .admin-sidebar { top:30px; height:calc(100vh - 30px); }
 @media (max-width:767px) { body:has(.back-office) .demo-banner + .back-office .admin-sidebar { height:auto; } }
+
+/* React shell derives navigation columns from the authenticated permissions. */
+.live-nav { grid-template-columns: repeat(var(--live-nav-count, 4), minmax(0, 1fr)) !important; }
